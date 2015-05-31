@@ -71,8 +71,10 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <cstring>
+#include <string>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include "array.h"
 #include "timer.h"
 #include "util.h"
@@ -188,8 +190,36 @@ class MaxWalkSat : public SAT
     int numtry = 0;
     int numsuccesstry = 0;
     long double lowCost = LDBL_MAX;
-    MLN *origMLN = state_->mln_;
+    //MLN *origMLN = state_->mln_;
     
+    ifstream parityConstraintFile("/afs/.ir.stanford.edu/users/r/a/raine/323/alchemy-2/src/infer/clauses.txt");
+    //parityConstraintFile.open("clauses.txt");
+    string clausestr;
+    if (parityConstraintFile.is_open())
+    {
+      while (getline(parityConstraintFile, clausestr) )
+      {
+        Clause *newParityClause = new Clause();
+        cout << clausestr << endl;
+        stringstream ss(clausestr);
+        string token;
+        while(getline(ss, token, ' ')) {
+          cout << token << endl;
+          if (token[0] == '!') {
+            cout << "negated!" << endl;
+            int varNum = atoi((token.substr(1)).c_str());
+            Predicate *pred = state_->getPredicateFromDomain(varNum);
+            pred->invertSense();
+          } else {
+            int varNum = atoi(token.c_str());
+            Predicate *pred = state_->getPredicateFromDomain(varNum);
+          }
+        }
+      }
+      parityConstraintFile.close();
+    } else {
+      cout << "unable to open file!" << endl;
+    }
       /* If keeping track of true clause groundings, then init to zero
     if (trackClauseTrueCnts_)
       resetCnts();

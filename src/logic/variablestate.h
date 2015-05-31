@@ -3196,6 +3196,12 @@ class VariableState
     breakHardClauses_ = breakHardClauses;
   }
   ////////////// END: Lazy Functions //////////////
+  Predicate *getPredicateFromDomain(const int& predId)
+  {
+   return domain_->getPredicate(predId);
+  }
+
+
 
   
  private:
@@ -3258,7 +3264,7 @@ class VariableState
     }
   }
 
- public:
+  public:
    // Inference mode: decide how getActiveClauses and addNewClauses
    // filter and set cost
   const static int MODE_MWS = 0;
