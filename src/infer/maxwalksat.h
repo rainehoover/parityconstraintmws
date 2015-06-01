@@ -197,6 +197,7 @@ class MaxWalkSat : public SAT
     string clausestr;
     if (parityConstraintFile.is_open())
     {
+      
       while (getline(parityConstraintFile, clausestr) )
       {
         Clause *newParityClause = new Clause();
@@ -205,15 +206,21 @@ class MaxWalkSat : public SAT
         string token;
         while(getline(ss, token, ' ')) {
           cout << token << endl;
+          Predicate *pred;
           if (token[0] == '!') {
             cout << "negated!" << endl;
             int varNum = atoi((token.substr(1)).c_str());
-            Predicate *pred = state_->getPredicateFromDomain(varNum);
+            pred = state_->getPredicateFromDomain(varNum);
             pred->invertSense();
           } else {
             int varNum = atoi(token.c_str());
-            Predicate *pred = state_->getPredicateFromDomain(varNum);
+            pred = state_->getPredicateFromDomain(varNum);
           }
+          newParityClause->appendPredicate(pred);
+          newParityClause->setIsHardClause(true);
+         // newParityClause->computeAndStoreIntArrRep(); (done before anything gets the intarrrep)
+         // state_->createVarIdToVarsFromDomain(newParityClause); (done before anything gets done to clause.. i think...)
+          
         }
       }
       parityConstraintFile.close();

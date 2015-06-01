@@ -3201,7 +3201,9 @@ class VariableState
    return domain_->getPredicate(predId);
   }
 
-
+/*  void createVarIdToVarsFromDomain(Clause *c) {
+     c->createVarIdToVarsGroundedType(domain_);
+  }*/
 
   
  private:
