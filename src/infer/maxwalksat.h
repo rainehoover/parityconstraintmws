@@ -15,7 +15,7 @@
  * or without modification, are permitted provided that
  * the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above
+ * 1. Redistributions of sourcea code must retain the above
  * copyright notice, this list of conditions and the
  * following disclaimer.
  *
@@ -195,6 +195,8 @@ class MaxWalkSat : public SAT
     ifstream parityConstraintFile("/afs/.ir.stanford.edu/users/r/a/raine/323/alchemy-2/src/infer/clauses.txt");
     //parityConstraintFile.open("clauses.txt");
     string clausestr;
+
+    state_->printNetwork(cout);
     if (parityConstraintFile.is_open())
     {
       
@@ -218,12 +220,14 @@ class MaxWalkSat : public SAT
           }
           newParityClause->appendPredicate(pred);
           newParityClause->setIsHardClause(true);
+          groundedParityClause = state_->getGroundClauseFromClause(newParityClause);
          // newParityClause->computeAndStoreIntArrRep(); (done before anything gets the intarrrep)
          // state_->createVarIdToVarsFromDomain(newParityClause); (done before anything gets done to clause.. i think...)
           
         }
       }
       parityConstraintFile.close();
+      state_->printNetwork(cout);
     } else {
       cout << "unable to open file!" << endl;
     }
