@@ -1534,6 +1534,17 @@ class VariableState
       cout << "Done adding new clauses.." << endl;
   }
 
+  void removeClauses(Array<GroundClause*> &clauses) {
+    if (vsdebug)
+      cout << "Removing " << clauses.size() << "old clauses.." << endl;
+    
+    int oldNumClauses = getNumClauses();
+    int oldNumAtoms = getNumAtoms();
+    // If no new atoms or clauses have been removed, then do nothing
+    if (numAtoms == oldNumAtoms && numClauses == oldNumClauses
+    
+  }
+
   /**
    * Updates isSatisfiedClause after an atom is fixed.
    * ASSUME: fixed val already applied, and updateMakeBreakCost called
@@ -3200,7 +3211,7 @@ class VariableState
   {
    return domain_->getPredicate(predId);
   }
-
+  
 /*  void createVarIdToVarsFromDomain(Clause *c) {
      c->createVarIdToVarsGroundedType(domain_);
   }*/
