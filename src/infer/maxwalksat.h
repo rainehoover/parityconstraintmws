@@ -220,7 +220,7 @@ class MaxWalkSat : public SAT
           }
           newParityClause->appendPredicate(pred);
           newParityClause->setIsHardClause(true);
-          groundedParityClause = state_->getGroundClauseFromClause(newParityClause);
+          GroundClause *groundedParityClause = state_->getGroundClauseFromClause(newParityClause);
          // newParityClause->computeAndStoreIntArrRep(); (done before anything gets the intarrrep)
          // state_->createVarIdToVarsFromDomain(newParityClause); (done before anything gets done to clause.. i think...)
           

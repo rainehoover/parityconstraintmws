@@ -1541,7 +1541,7 @@ class VariableState
     int oldNumClauses = getNumClauses();
     int oldNumAtoms = getNumAtoms();
     // If no new atoms or clauses have been removed, then do nothing
-    if (numAtoms == oldNumAtoms && numClauses == oldNumClauses
+    //if (numAtoms == oldNumAtoms && numClauses == oldNumClauses
     
   }
 
@@ -3214,7 +3214,7 @@ class VariableState
 
   GroundClause *getGroundClauseFromClause(Clause *inputClause)
   {
-    return new GroundClause(inputClause, gndPredHashArray_);
+    return new GroundClause(inputClause, &gndPredHashArray_);
   }
 /*  void createVarIdToVarsFromDomain(Clause *c) {
      c->createVarIdToVarsGroundedType(domain_);
