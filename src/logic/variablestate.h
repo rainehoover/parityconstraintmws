@@ -1487,7 +1487,7 @@ class VariableState
         occurence_[litIdx].append(i);
       }
 
-        // Hard clause weight has been previously determined
+      // Hard clause weight has been previously determined
       if (inferenceMode_==MODE_SAMPLESAT)
       {
         if (gndClause->getWt()>0) clauseCost_[i] = 1;
@@ -2257,6 +2257,7 @@ class VariableState
       }
 
       clauseFrequencies = gndClause->getClauseFrequencies();
+      if (clauseFrequencies) {
       for (itr = clauseFrequencies->begin();
            itr != clauseFrequencies->end(); itr++)
       {
@@ -2300,6 +2301,7 @@ class VariableState
         }
         (*numGndings)[clauseno] += frequency;
       }
+     }
     }
     
       // Getting true counts in lazy: we have to add the remaining groundings
@@ -2371,8 +2373,9 @@ class VariableState
         }
         if (isTrueLiteral(lit)) satLitcnt++;
       }
-
+   
       clauseFrequencies = gndClause->getClauseFrequencies();
+      if (clauseFrequencies) {
       for (itr = clauseFrequencies->begin();
            itr != clauseFrequencies->end(); itr++)
       {
@@ -2400,6 +2403,7 @@ class VariableState
         }
         numGndings[clauseno] += frequency;
       }
+     }
     }
   }
 

@@ -70,7 +70,7 @@
 
 GroundClause::GroundClause(Array<int> predIndices, 
                            GroundPredicateHashArray* const & gndPredHashArray) 
-  : wt_(DBL_MAX), foClauseFrequencies_(NULL)
+  : wt_(HARD_GROUNDCLAUSE_WT), foClauseFrequencies_(NULL)
 {
   if (gcdebug) cout << "Constructing GroundClause" << endl;
   if (gcdebug)
@@ -230,6 +230,7 @@ void GroundClause::setWtToSumOfParentWts(const MLN* const & mln)
   wt_ = 0;
 
   IntBoolPairItr itr;
+  if (foClauseFrequencies_) {
   for (itr = foClauseFrequencies_->begin();
        itr != foClauseFrequencies_->end(); itr++)
   {
@@ -240,6 +241,9 @@ void GroundClause::setWtToSumOfParentWts(const MLN* const & mln)
     if (invertWt) wt_ -= parentWeight*frequency;
     else wt_ += parentWeight*frequency;
   }
+  } else {
+     wt_ = HARD_GROUNDCLAUSE_WT;
+  } 
 }
 
 void GroundClause::printWithoutWt(ostream& out) const
