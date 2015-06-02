@@ -94,6 +94,36 @@ class MCSAT : public MCMC
   {
 	Timer timer1;
 
+     ifstream parityConstraintFile("/afs/.ir.stanford.edu/users/r/a/raine/323/alchemy-2/src/infer/clauses.txt");
+    //parityConstraintFile.open("clauses.txt");
+    string clausestr;
+
+    state_->printNetwork(cout);
+    Array<GroundClause *> newClauses;
+    if (parityConstraintFile.is_open())
+    {
+      
+      while (getline(parityConstraintFile, clausestr) )
+      {
+        cout << clausestr << endl;
+        stringstream ss(clausestr);
+        string token;
+        Array<int> predIndices;
+        while(getline(ss, token, ' ')) {
+          cout << token << endl;
+          int varNum = atoi(token.c_str());
+          predIndices.append(varNum);
+        }
+        GroundClause *newClause = state_->getGroundClauseFromIndices(predIndices);
+        newClauses.append(newClause);
+      }
+      parityConstraintFile.close();
+      state_->addNewClauses(1, newClauses);
+      state_->printNetwork(cout);
+    } else {
+      cout << "unable to open file!" << endl;
+    }
+
       // We don't need to track clause true counts in up and ss
     //up_ = new UnitPropagation(state_, seed, false);
     mws_ = new MaxWalkSat(state_, seed, false, mcsatParams->mwsParams);
