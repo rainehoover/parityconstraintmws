@@ -3212,9 +3212,9 @@ class VariableState
    return domain_->getPredicate(predId);
   }
 
-  GroundClause *getGroundClauseFromClause(Clause *inputClause)
+  GroundClause *getGroundClauseFromIndices(Array<int> predIndices)
   {
-    return new GroundClause(inputClause, &gndPredHashArray_);
+    return new GroundClause(predIndices, &gndPredHashArray_);
   }
 /*  void createVarIdToVarsFromDomain(Clause *c) {
      c->createVarIdToVarsGroundedType(domain_);

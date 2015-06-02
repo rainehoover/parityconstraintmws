@@ -197,36 +197,26 @@ class MaxWalkSat : public SAT
     string clausestr;
 
     state_->printNetwork(cout);
+    Array<GroundClause *> newClauses;
     if (parityConstraintFile.is_open())
     {
       
       while (getline(parityConstraintFile, clausestr) )
       {
-        Clause *newParityClause = new Clause();
         cout << clausestr << endl;
         stringstream ss(clausestr);
         string token;
+        Array<int> predIndices;
         while(getline(ss, token, ' ')) {
           cout << token << endl;
-          Predicate *pred;
-          if (token[0] == '!') {
-            cout << "negated!" << endl;
-            int varNum = atoi((token.substr(1)).c_str());
-            pred = state_->getPredicateFromDomain(varNum);
-            pred->invertSense();
-          } else {
-            int varNum = atoi(token.c_str());
-            pred = state_->getPredicateFromDomain(varNum);
-          }
-          newParityClause->appendPredicate(pred);
-          newParityClause->setIsHardClause(true);
-          GroundClause *groundedParityClause = state_->getGroundClauseFromClause(newParityClause);
-         // newParityClause->computeAndStoreIntArrRep(); (done before anything gets the intarrrep)
-         // state_->createVarIdToVarsFromDomain(newParityClause); (done before anything gets done to clause.. i think...)
-          
+          int varNum = atoi(token.c_str());
+          predIndices.append(varNum);
         }
+        GroundClause *newClause = state_->getGroundClauseFromIndices(predIndices);
+        newClauses.append(newClause);
       }
       parityConstraintFile.close();
+      state_->addNewClauses(1, newClauses);
       state_->printNetwork(cout);
     } else {
       cout << "unable to open file!" << endl;

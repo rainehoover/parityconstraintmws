@@ -68,6 +68,60 @@
 #include "clause.h"
 #include "mln.h"
 
+GroundClause::GroundClause(Array<int> predIndices, 
+                           GroundPredicateHashArray* const & gndPredHashArray) 
+  : wt_(DBL_MAX), foClauseFrequencies_(NULL)
+{
+  if (gcdebug) cout << "Constructing GroundClause" << endl;
+  if (gcdebug)
+  {
+    cout << "Seen ground preds: " << endl;
+    for (int i = 0; i < gndPredHashArray->size(); i++)
+    {
+      (*gndPredHashArray)[i]->print(cout);
+      cout << endl;
+    }
+  }
+
+
+  int numPreds = predIndices.size();
+  if (gcdebug) cout << "Number of preds: " << numPreds << endl;
+
+  gndPredIndexes_ = new Array<int>;
+  Array<unsigned int>* intArrRep = new Array<unsigned int>;
+
+    // For each predicate in clause c
+  for (int i = 0; i < numPreds; i++)
+  {
+    if (gcdebug) cout << "Looking at pred " << i << endl;
+    
+    if (gcdebug) cout << "Finding GroundPredicate" << endl;
+    int index = abs(predIndices[i]);
+
+    if (gcdebug) cout << "Index of GroundPredicate: " << index << endl;
+
+    index++;
+      // index is the index in hash array + 1    
+    int wlit;
+    if (predIndices[i] >= 0)
+    {
+      wlit = index;
+      intArrRep->append(1);
+    }
+    else
+    {
+      wlit = -index;
+      intArrRep->append((unsigned int)0);
+    }
+    intArrRep->append(index);
+    gndPredIndexes_->append(wlit);
+  }
+  
+  hashCode_ = Hash::hash(*intArrRep);
+  delete intArrRep;
+  gndPredIndexes_->compress();
+}
+
 GroundClause::GroundClause(const Clause* const & c, 
                            GroundPredicateHashArray* const & gndPredHashArray) 
   : wt_(c->getWt()), foClauseFrequencies_(NULL)
