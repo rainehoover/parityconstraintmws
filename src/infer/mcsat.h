@@ -98,6 +98,7 @@ class MCSAT : public MCMC
     //parityConstraintFile.open("clauses.txt");
     string clausestr;
 
+    cout << "Network before adding constraints ~~~~~~~~~~~~~~~~~~~" << endl;
     state_->printNetwork(cout);
     Array<GroundClause *> newClauses;
     if (parityConstraintFile.is_open())
@@ -119,6 +120,7 @@ class MCSAT : public MCMC
       }
       parityConstraintFile.close();
       state_->addNewClauses(1, newClauses);
+      cout << "Network after adding constraints ~~~~~~~~~~~~~~~~~~~~~~~" << endl;
       state_->printNetwork(cout);
     } else {
       cout << "unable to open file!" << endl;

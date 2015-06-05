@@ -4,7 +4,7 @@ import random
 
 		
 def main():
-	outfile = sys.argv[1] # where to write the clauses to (e.g. "out.txt")
+	outfile = "/afs/.ir.stanford.edu/users/r/a/raine/323/alchemy-2/src/infer/clauses.txt" #sys.argv[1] # where to write the clauses to (e.g. "out.txt")
 	n = int(sys.argv[2]) # number variables
 	k = int(sys.argv[3]) # number variables per constraint
 	m = int(sys.argv[4]) # number constraints to add
