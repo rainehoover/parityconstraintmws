@@ -1223,7 +1223,6 @@ int buildInference(Inference*& inference, Domain*& domain,
       cout << endl;
     }
   }
-  cout << "ZORT POIT The number of clauses is: " << mln->getNumClauses();
     //////////////////////////// run inference /////////////////////////////////
 
     ///////////////////////// read & create query predicates ///////////////////
