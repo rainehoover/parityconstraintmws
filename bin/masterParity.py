@@ -37,7 +37,7 @@ def main():
 		finalOutput.write(k + " " + str(v) + "\n")
 
 def getMargProb(mln, result, test, query, gpredicate):
-	inferCommand = "./infer -ms -i " + mln + " -r " + result + " -e " + test + " -q " + query
+	inferCommand = "../../../alchemy-2/bin/infer -ms -i " + mln + " -r " + result + " -e " + test + " -q " + query
 	print(inferCommand)
 	os.system(inferCommand)
 	grepCommand = "grep '" + gpredicate + "' " + result
