@@ -8,6 +8,7 @@ def main():
 	k = int(sys.argv[2])	
 	m = int(sys.argv[3])
 	A = int(sys.argv[4])
+	print n, k, m, A
 	mln = sys.argv[5]
 	resBaseStrWt = sys.argv[6]
 	train = sys.argv[7]
@@ -28,7 +29,7 @@ def main():
 		os.system(makeClausesCommand)
 		#get weights learned from this perturbed distribution (perturbed by this A)
 		getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + str(i) + " -t     " + train + " -ne " + lwQuery
-		#os.system(getWeightsCommand)
+#		os.system(getWeightsCommand)
 		#add weights to running total, to be averaged in the end
 		weightsFilei = open(resBaseStrWt + str(i), "r")
 		line = weightsFilei.readline()
@@ -54,10 +55,12 @@ def main():
 		line = wtsTemplate.readline()
 		print line
 	wtsResult.write("\n")
-	for k,v in weights.items():
-		weightFormula = str(v) + " " + k
+	for x,y in weights.items():
+		weightFormula = str(y) + " " + x + "\n"
 		print weightFormula
 		wtsResult.write(weightFormula)
+	wtsTemplate.close()
+	wtsResult.close()
 
 	###* Inferring for each ground predicate *###
 
@@ -71,6 +74,11 @@ def main():
 	numGPDict['Smokes'] = 8
 	numGPDict['Friends'] = 28
 	numGPDict['Cancer'] = 6
+	computeMargForGPs(mln, resBaseStrMg, test, margProbs, numGPDict, A, k, m)
+#	inferCommand = "./infer -ms -i cumulative-out.mln -r " + resBaseStrMg + str(i) + " -e " + test + " -q Friends"
+#	print(" HELLO THIS IS THE INFER COMMAND POIT: " + inferCommand)
+#	os.system(inferCommand)
+
 '''
 	for gp in range(n):
 		#number of gps for this particular gp's template predicate (i.e. Smokes(John) --> Smokes has 3 gps)
@@ -82,40 +90,56 @@ def main():
 			makeClausesCommand = "python ./makeclauses.py " + str(gpn) + " " + str(k) + " " +str(m) + "     " + str(i)
 			os.system(makeClausesCommand)
 			computeMargForGPs(mln, result, test, margProbs)
+'''
 
-def getMargProb(mln, result, test, query):
-	inferCommand = "./infer -ms -i " + mln + " -r " + result + " -e " + test + " -q " + query
-	
+def getMargProb(mln, result, test, query, A, k, m, gpNum, mpDict, gp):
+	#for each Ai
+	for i in range(A):
+		#make this Ai
+		makeClausesCommand = "python ./makeclauses.py " + str(gpNum) + " " + str(k) + " " +str(m) + " " + str(i)
+		print(makeClausesCommand)
+		os.system(makeClausesCommand)
+		resultName = result + str(i)
+		#run infer on this perturbed distribution with Ai, using averaged weights
+		inferCommand = "./infer -ms -i cumulative-out.mln -r " + resultName + " -e " + test + " -q " + query
+		os.system(inferCommand)
+		#grep for gp in result file and add in i's contribution to average marginal over all A's
+		grepString = "grep '" + gp + "' " + resultName
+		print(grepString)
+		os.system("grep '" + gp + "' " + resultName)
+#		print varAndMarg
 
-def computeMargForGPs(mln, result, test, mpDict):
+#loop over all the grounded predicates in the test database file
+def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m):
         testdb = open(test, "r+")
         last_pos = testdb.tell()
         line = testdb.readline()
         while line != '':
                 print("curr line: " + line)
-                if line.strip():
-                        #do stuff with the line
-                        query = line.split("(",1)[0]
-                        print(query)
+                if line.strip(): #if it's not a blank line
+                        #get the query value to pass to infer
+			query = line.split("(",1)[0]
+			#number of variables involved in A for this query
+			gpNum = numGPDict[query]
                         commentedOut = "//" + line[2:]
                         #go back to beginning
                         testdb.seek(last_pos)
                         #overwrite with new line
                         testdb.write(commentedOut)
-                        #get marg prob with commented out line
-                #       predProbs[line] = getMargProb(query, )
-                        margProb = getMargProb(mln, result, test, query, line)
-                        print("commented out version: " + commentedOut)
+			testdb.close()
+                        #get marg prob for this grounded predicate over all As generated
+                        mpDict[line.strip()] = getMargProb(mln, result, test, query, A, k, m, gpNum, mpDict, line.strip())
                         #replace commented out line with old line
+			testdb = open(test, "r+")
                         testdb.seek(last_pos) #back before line
                         testdb.write(line)
-                        #now we're ready to call readline again, but 
-                        #first store new last position so we can overwrite
-                        #that line appropriately
-                 else:
+                else:
                         print("ignoring blank line")
-                 last_pos = testdb.tell()
-                 line = testdb.readline()
-'''	
+		#now we're ready to call readline again, but 
+                #first store new last position so we can overwrite
+                #that line appropriately
+                last_pos = testdb.tell()
+                line = testdb.readline()
+	
 if __name__ == '__main__':
 	main()
