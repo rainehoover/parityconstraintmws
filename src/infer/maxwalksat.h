@@ -184,13 +184,9 @@ class MaxWalkSat : public SAT
    */
   void infer()
   {
-    numSolutions_ = 3;
-    maxTries_ = 3;
-    
     int numtry = 0;
     int numsuccesstry = 0;
     long double lowCost = LDBL_MAX;
-    //MLN *origMLN = state_->mln_;
     
    
       /* If keeping track of true clause groundings, then init to zero
