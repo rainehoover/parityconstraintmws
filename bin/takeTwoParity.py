@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 from collections import defaultdict
+import math
 
 def main():
 	n = int(sys.argv[1])
@@ -75,6 +76,10 @@ def main():
 	numGPDict['Friends'] = 28
 	numGPDict['Cancer'] = 6
 	computeMargForGPs(mln, resBaseStrMg, test, margProbs, numGPDict, A, k, m)
+	finalSum = 0.0
+	for mp in margProbs.values():
+		finalSum += math.log(mp)
+	print("OMG FINAL SUM: " + str(finalSum))
 #	inferCommand = "./infer -ms -i cumulative-out.mln -r " + resBaseStrMg + str(i) + " -e " + test + " -q Friends"
 #	print(" HELLO THIS IS THE INFER COMMAND POIT: " + inferCommand)
 #	os.system(inferCommand)
@@ -104,10 +109,16 @@ def getMargProb(mln, result, test, query, A, k, m, gpNum, mpDict, gp):
 		inferCommand = "./infer -ms -i cumulative-out.mln -r " + resultName + " -e " + test + " -q " + query
 		os.system(inferCommand)
 		#grep for gp in result file and add in i's contribution to average marginal over all A's
-		grepString = "grep '" + gp + "' " + resultName
+		grepString = "grep '" + gp.replace(" ","") + "' " + resultName
 		print(grepString)
-		os.system("grep '" + gp + "' " + resultName)
-#		print varAndMarg
+		varAndMarg = subprocess.check_output(grepString, shell=True)
+		print("Var and marg: " + varAndMarg)
+		varAndMargArr = varAndMarg.split()
+		print varAndMargArr
+		mpDict[varAndMargArr[0]] += float(varAndMargArr[1])
+	print mpDict
+	mpDict.update({k: v/A for k, v in mpDict.items()})
+	print mpDict
 
 #loop over all the grounded predicates in the test database file
 def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m):
@@ -128,7 +139,7 @@ def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m):
                         testdb.write(commentedOut)
 			testdb.close()
                         #get marg prob for this grounded predicate over all As generated
-                        mpDict[line.strip()] = getMargProb(mln, result, test, query, A, k, m, gpNum, mpDict, line.strip())
+                        getMargProb(mln, result, test, query, A, k, m, gpNum, mpDict, line.strip())
                         #replace commented out line with old line
 			testdb = open(test, "r+")
                         testdb.seek(last_pos) #back before line
