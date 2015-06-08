@@ -12,7 +12,7 @@ STATIC=-static
 #CLFLAGS=-O3 $(STATIC) $(INLINE_WARN) $(INLINE_LIMIT)
 
 ######## Optimize and turn off asserts
-CLFLAGS=-O0 -DNDEBUG $(STATIC) $(INLINE_WARN) $(INLINE_LIMIT)
+CLFLAGS=-O3 -DNDEBUG $(STATIC) $(INLINE_WARN) $(INLINE_LIMIT)
 
 ########## Debug
 CLFLAGS=-g
@@ -397,7 +397,7 @@ depend:
 
 ############ Everything below here is subject to SUDDEN DEATH #####
 #
-# dependencies generated on:  Tue Jun 2 12:50:24 PDT 2015
+# dependencies generated on:  Fri Jun 5 15:43:42 PDT 2015
 #
 ../bin/obj/arguments.o: ../src/util/arguments.cpp ../src/util/arguments.h
 
