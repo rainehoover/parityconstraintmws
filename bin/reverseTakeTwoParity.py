@@ -19,12 +19,12 @@ def main():
 	resBaseStrMg = sys.argv[10]
 	query = sys.argv[11]
 	resultDict = defaultdict(float) #keep k from 3 up, m from 4 up
-	for i in range(4, AMatrices + 1):
-		for k in range(3, kVars + 1):
+	for i in range(AMatrices, 4 - 1, -1): 
+		for k in range(kVars, 3 - 1, -1):
 			print("n, k, m, i = "+ str(nVars), str(k), str(mClauses), str(i))
-			runId = "n" + str(nVars) + "k" + str(k) + "m" + str(mClauses) + "A" + str(i) 
+			runId = "n" + str(nVars) + "k" + str(k) + "m" + str(mClauses) + "A" + str(i)
 			try:
-				f = open('resultDict' + runId + '.p', 'r')
+				f = open('resultDict' + runId + '.p', 'r')	
 				print("Already have results for run " + runId + "\n")
 				f.close()
 			except IOError:
@@ -48,6 +48,7 @@ def getWeights(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, runId):
 				tokens = line.split(" ", 1)
 				weights[tokens[1].strip()] += float(tokens[0])
 			line = weightsFilei.readline()
+		weightsFilei.close()
 	#take the average over all i's
 	print weights
 	weights.update({k: v/A for k, v in weights.items()})
@@ -82,6 +83,7 @@ def runOnce(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, resBaseStrMg, q
 	try:
 		wtsResult = open("cumulative-out.mln" + runId, "r")
 		print("Already had weights for run " + runId + "\n")
+		wtsResult.close()
 	except IOError:
 		print("Didn't already have weights for run " + runId + "\n")
 		getWeights(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, runId)
@@ -197,6 +199,7 @@ def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m, mpDictOOB, 
                 #that line appropriately
                 last_pos = testdb.tell()
                 line = testdb.readline()
+	testdb.close()
 	
 if __name__ == '__main__':
 	main()
