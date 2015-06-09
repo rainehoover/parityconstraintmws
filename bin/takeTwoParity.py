@@ -19,8 +19,8 @@ def main():
 	resBaseStrMg = sys.argv[10]
 	query = sys.argv[11]
 	resultDict = defaultdict(float) #keep k from 3 up, m from 4 up
-	for i in range(4, AMatrices + 1):
-		for k in range(3, kVars + 1):
+	for i in range(AMatrices, AMatrices + 1):
+		for k in range(kVars, kVars + 1):
 			print("n, k, m, i = "+ str(nVars), str(k), str(mClauses), str(i))
 			runId = "n" + str(nVars) + "k" + str(k) + "m" + str(mClauses) + "A" + str(i) 
 			try:
@@ -32,47 +32,67 @@ def main():
 
 def getWeights(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, runId):
 	weights = defaultdict(float)
-	for i in range(A):
-		print("Getting weights for A #" + str(i) + "\n")
-		#make A (n = 122 for uw, 10 for smoking)
-		makeClausesCommand = "python ./makeclauses.py " + str(n) + " " + str(k) + " " +str(m) + " " + str(i)
-		os.system(makeClausesCommand)
-		#get weights learned from this perturbed distribution (perturbed by this A)
-		getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + runId + str(i) + " -t " + train + " -ne " + lwQuery
-		os.system(getWeightsCommand)
-		#add weights to running total, to be averaged in the end
-		weightsFilei = open(resBaseStrWt + runId + str(i), "r")
-		line = weightsFilei.readline()
-		while line != '':
-			if (line[0].isdigit()):
-				tokens = line.split(" ", 1)
-				weights[tokens[1].strip()] += float(tokens[0])
+	try:
+		f = open('avgWts' + runId + '.p', "r")
+		print("Already have avgWts for run " + runId + "\n")
+		f.close()
+		weights = pickle.load(open('avgWts' + runId + '.p','rb'))
+	except IOError:
+		for i in range(A):
+			print("Getting weights for A #" + str(i) + "\n")
+			#make A (n = 122 for uw, 10 for smoking)
+			makeClausesCommand = "python ./makeclauses.py " + str(n) + " " + str(k) + " " +str(m) + " " + str(i)
+			os.system(makeClausesCommand)
+			#get weights learned from this perturbed distribution (perturbed by this A)
+			getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + runId + str(i) + " -t " + train + " -ne " + lwQuery
+			os.system(getWeightsCommand)
+			#add weights to running total, to be averaged in the end
+			weightsFilei = open(resBaseStrWt + runId + str(i), "r")
 			line = weightsFilei.readline()
-	#take the average over all i's
-	print weights
-	weights.update({k: v/A for k, v in weights.items()})
-	print weights
-	pickle.dump(weights, open('avgWts' + runId + '.p', 'wb'))
+			while line != '':
+				if (line[0].isdigit()):
+					tokens = line.split(" ", 1)
+					weights[tokens[1].strip()] += float(tokens[0])
+				line = weightsFilei.readline()
+		#take the average over all i's
+		print weights
+		weights.update({k: v/A for k, v in weights.items()})
+		print weights
+		pickle.dump(weights, open('avgWts' + runId + '.p', 'wb'))
 
 	###* Write averaged weights to file *###
-	wtsResult = open("cumulative-out.mln" + runId, "w+")
+	try:
+		wtsResult = open("cumulative-out.mln" + runId, "w")
+	except IOError:
+		print "Can't open cumulative-out.mln" + runId 
 	wtsFile = resBaseStrWt + runId + "0" 
 	print wtsFile
-	wtsTemplate = open(wtsFile, "r+")
+	try:
+		wtsTemplate = open(wtsFile, "r+")
+	except IOError:
+		print "Can't open " + wtsFile
+	print ("everything we're printing is stuff we're REALLY reading and then writing")	
 	line = wtsTemplate.readline()
-	#print line
-	while not line[0].isdigit():
-		wtsResult.write(line)
+	print line
+	while not line[0].isdigit() and not line[0] == '-':
+		if line[0] != '/':
+			wtsResult.write(line)
+		else:
+			print ("ignoring comment")
 		line = wtsTemplate.readline()
-	#	print line
+		print line
 	wtsResult.write("\n")
+	print("everything we're printing is stuff we're REALLY creating and then writing")
 	for x,y in weights.items():
-		weightFormula = str(y) + " " + x + "\n"
-	#	print weightFormula
-		wtsResult.write(weightFormula)
-	wtsTemplate.close()
-	wtsResult.close()
 
+		weightFormula = str(y) + " " + x + "\n"
+		print weightFormula
+		wtsResult.write(weightFormula)
+	try:
+		wtsTemplate.close()
+		wtsResult.close()
+	except IOError:
+		print "Couldn't close cumulative-out.mln" + runId + " or " + wtsFile
 
 def runOnce(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, resBaseStrMg, query, resultDict, runId):
 	print("running run: " + runId + "\n")
