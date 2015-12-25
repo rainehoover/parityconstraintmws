@@ -44,20 +44,29 @@ def getWeights(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, runId):
 			makeClausesCommand = "python ./makeclauses.py " + str(n) + " " + str(k) + " " +str(m) + " " + str(i)
 			os.system(makeClausesCommand)
 			#get weights learned from this perturbed distribution (perturbed by this A)
-			getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + runId + str(i) + " -t " + train + " -ne " + lwQuery
-			os.system(getWeightsCommand)
+			try:
+				weightsFilei = open(resBaseStrWt + runId + str(i), "r")
+				print("Hey guess what! we're golden on this weights run and iteration: " + runId + str(i))
+				weightsFilei.close()
+			except:
+				getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + runId + str(i) + " -t " + train + " -ne " + lwQuery
+				os.system(getWeightsCommand)
 			#add weights to running total, to be averaged in the end
 			weightsFilei = open(resBaseStrWt + runId + str(i), "r")
 			line = weightsFilei.readline()
 			while line != '':
-				if (line[0].isdigit()):
+				if (line[0].isdigit() or line[0] == '-'):
+					print("paying attention to: " + line)
 					tokens = line.split(" ", 1)
 					weights[tokens[1].strip()] += float(tokens[0])
+				else:
+					print("ignoring line: " + line)
 				line = weightsFilei.readline()
 		#take the average over all i's
 		print weights
 		weights.update({k: v/A for k, v in weights.items()})
 		print weights
+		print len(weights)
 		pickle.dump(weights, open('avgWts' + runId + '.p', 'wb'))
 
 	###* Write averaged weights to file *###
@@ -84,10 +93,10 @@ def getWeights(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, runId):
 	wtsResult.write("\n")
 	print("everything we're printing is stuff we're REALLY creating and then writing")
 	for x,y in weights.items():
-
 		weightFormula = str(y) + " " + x + "\n"
 		print weightFormula
 		wtsResult.write(weightFormula)
+		wtsResult.write("\n")
 	try:
 		wtsTemplate.close()
 		wtsResult.close()
