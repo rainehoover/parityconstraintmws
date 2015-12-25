@@ -18,15 +18,13 @@ def main():
 	test = sys.argv[9]
 	resBaseStrMg = sys.argv[10]
 	query = sys.argv[11]
-	iterating = int(sys.argv[12])
-	threadId = int(sys.argv[13])
 	resultDict = defaultdict(float) #keep k from 3 up, m from 4 up
-	for i in range(AMatrices, AMatrices + 1):
-		for k in range(kVars, kVars + 1):
+	for i in range(AMatrices, 4 - 1, -1): 
+		for k in range(kVars, 3 - 1, -1):
 			print("n, k, m, i = "+ str(nVars), str(k), str(mClauses), str(i))
-			runId = "n" + str(nVars) + "k" + str(k) + "m" + str(mClauses) + "A" + str(i) 
+			runId = "n" + str(nVars) + "k" + str(k) + "m" + str(mClauses) + "A" + str(i)
 			try:
-				f = open('resultDict' + runId + '.p', 'r')
+				f = open('resultDict' + runId + '.p', 'r')	
 				print("Already have results for run " + runId + "\n")
 				f.close()
 			except IOError:
@@ -34,89 +32,55 @@ def main():
 
 def getWeights(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, runId):
 	weights = defaultdict(float)
-	try:
-		f = open('avgWts' + runId + '.p', "r")
-		print("Already have avgWts for run " + runId + "\n")
-		f.close()
-		weights = pickle.load(open('avgWts' + runId + '.p','rb'))
-	except IOError:
-		for i in range(A):
-			print("Getting weights for A #" + str(i) + "\n")
-			#make A (n = 122 for uw, 10 for smoking)
-			makeClausesCommand = "python ./makeclauses.py " + str(n) + " " + str(k) + " " +str(m) + " " + str(i)
-			os.system(makeClausesCommand)
-			#get weights learned from this perturbed distribution (perturbed by this A)
-			try:
-				weightsFilei = open(resBaseStrWt + runId + str(i), "r")
-				print("Hey guess what! we're golden on this weights run and iteration: " + runId + str(i))
-				weightsFilei.close()
-			except:
-				getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + runId + str(i) + " -t " + train + " -ne " + lwQuery
-				os.system(getWeightsCommand)
-			#add weights to running total, to be averaged in the end
-			weightsFilei = open(resBaseStrWt + runId + str(i), "r")
+	for i in range(A):
+		print("Getting weights for A #" + str(i) + "\n")
+		#make A (n = 122 for uw, 10 for smoking)
+		makeClausesCommand = "python ./makeclauses.py " + str(n) + " " + str(k) + " " +str(m) + " " + str(i)
+		os.system(makeClausesCommand)
+		#get weights learned from this perturbed distribution (perturbed by this A)
+		getWeightsCommand = "./learnwts -d -i " + mln + " -o " + resBaseStrWt + runId + str(i) + " -t " + train + " -ne " + lwQuery
+		os.system(getWeightsCommand)
+		#add weights to running total, to be averaged in the end
+		weightsFilei = open(resBaseStrWt + runId + str(i), "r")
+		line = weightsFilei.readline()
+		while line != '':
+			if (line[0].isdigit()):
+				tokens = line.split(" ", 1)
+				weights[tokens[1].strip()] += float(tokens[0])
 			line = weightsFilei.readline()
-			while line != '':
-				if (line[0].isdigit() or line[0] == '-'):
-					print("paying attention to: " + line)
-					tokens = line.split(" ", 1)
-					weights[tokens[1].strip()] += float(tokens[0])
-				else:
-					print("ignoring line: " + line)
-				line = weightsFilei.readline()
-		#take the average over all i's
-		print weights
-		weights.update({k: v/A for k, v in weights.items()})
-		print weights
-		print len(weights)
-		pickle.dump(weights, open('avgWts' + runId + '.p', 'wb'))
+		weightsFilei.close()
+	#take the average over all i's
+	print weights
+	weights.update({k: v/A for k, v in weights.items()})
+	print weights
+	pickle.dump(weights, open('avgWts' + runId + '.p', 'wb'))
 
 	###* Write averaged weights to file *###
-	try:
-		wtsResult = open("cumulative-out.mln" + runId, "w")
-	except IOError:
-		print "Can't open cumulative-out.mln" + runId 
+	wtsResult = open("cumulative-out.mln" + runId, "w+")
 	wtsFile = resBaseStrWt + runId + "0" 
 	print wtsFile
-	try:
-		wtsTemplate = open(wtsFile, "r+")
-	except IOError:
-		print "Can't open " + wtsFile
-	print ("everything we're printing is stuff we're REALLY reading and then writing")	
+	wtsTemplate = open(wtsFile, "r+")
 	line = wtsTemplate.readline()
-	print line
-	while not line[0].isdigit() and not line[0] == '-':
-		if line[0] != '/':
-			wtsResult.write(line)
-		else:
-			print ("ignoring comment")
+	#print line
+	while not line[0].isdigit():
+		wtsResult.write(line)
 		line = wtsTemplate.readline()
-		print line
+	#	print line
 	wtsResult.write("\n")
-	print("everything we're printing is stuff we're REALLY creating and then writing")
 	for x,y in weights.items():
 		weightFormula = str(y) + " " + x + "\n"
-		print weightFormula
+	#	print weightFormula
 		wtsResult.write(weightFormula)
-		wtsResult.write("\n")
-	try:
-		wtsTemplate.close()
-		wtsResult.close()
-	except IOError:
-		print "Couldn't close cumulative-out.mln" + runId + " or " + wtsFile
+	wtsTemplate.close()
+	wtsResult.close()
 
-def runOnce(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, resBaseStrMg, query, resultDict, runId, iterating, threadId):
+
+def runOnce(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, resBaseStrMg, query, resultDict, runId):
 	print("running run: " + runId + "\n")
 	###* Learning weights *###
 	print("Number of A's to be created: " + str(A))
 	#try to open file of weights, if I can't, give up.
 	try:
-		#runId2 = ''
-		#if not iterating:
-		#	print("really not iterating!")
-		#	runId2 += runId[:len(runId) - 1]
-		#else:
-		#	runId2 += runId
 		wtsResult = open("cumulative-out.mln" + runId, "r")
 		print("Already had weights for run " + runId + "\n")
 		wtsResult.close()
@@ -145,7 +109,7 @@ def runOnce(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, resBaseStrMg, q
 	
 	
 	#get the marginal probabilities for each gp
-	computeMargForGPs(mln, resBaseStrMg, test, margProbsRP, numGPDict, A, k, m, margProbsOOB, query, runId, iterating, threadId)
+	computeMargForGPs(mln, resBaseStrMg, test, margProbsRP, numGPDict, A, k, m, margProbsOOB, query, runId)
 	
 #	pickle.dump(margProbsRP, open('mpsRP2' + str(A) + str(k) + str(m) + '.p', 'wb'))
 #	pickle.dump(margProbsOOB, open('mpsOOB.p', 'wb'))
@@ -164,7 +128,7 @@ def runOnce(n, k, m, A, mln, resBaseStrWt, train, lwQuery, test, resBaseStrMg, q
 	print resultDict
 	pickle.dump(resultDict, open('resultDict' + runId + '.p', 'wb'))
 
-def getMargProbRP(mln, result, test, query, A, k, m, gpNum, mpDict, gp, runId, iterating):
+def getMargProbRP(mln, result, test, query, A, k, m, gpNum, mpDict, gp, runId):
 	#for each Ai
 	for i in range(A):
 		#make this Ai
@@ -173,10 +137,7 @@ def getMargProbRP(mln, result, test, query, A, k, m, gpNum, mpDict, gp, runId, i
 		os.system(makeClausesCommand)
 		resultName = result + str(i)
 		#run infer on this perturbed distribution with Ai, using averaged weights
-		if iterating:
-			inferCommand = "./infer -ms -i cumulative-out.mln" + runId + " -r " + resultName + " -e " + test + " -q " + query
-		else:
-			inferCommand =  "./infer -ms -i cumulative-out.mln" + runId + " -r " + resultName + " -e " + test + " -q " + query
+		inferCommand = "./infer -ms -i cumulative-out.mln" + runId + " -r " + resultName + " -e " + test + " -q " + query
 		os.system(inferCommand)
 		#grep for gp in result file and add in i's contribution to average marginal over all A's
 		grepString = "grep '" + gp.replace(" ","") + "' " + resultName
@@ -206,14 +167,12 @@ def getMargProbOOB(mln, result, test, query, gp, mpDict):
 	print mpDict
 
 #loop over all the grounded predicates in the test database file
-def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m, mpDictOOB, query, runId, iterating, threadId):
-        test = test + str(threadId)
-	print("test db: " + test)
-	testdb = open(test, "r+")
+def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m, mpDictOOB, query, runId):
+        testdb = open(test, "r+")
         last_pos = testdb.tell()
         line = testdb.readline()
         while line != '':
-                print("curr line: " + line)
+        #        print("curr line: " + line)
                 if line.strip(): #if it's not a blank line
                         #get the query value to pass to infer
 			currp = line.split("(",1)[0]
@@ -227,7 +186,7 @@ def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m, mpDictOOB, 
 				testdb.write(commentedOut)
 				testdb.close()
 				#get marg prob for this grounded predicate over all As generated
-				getMargProbRP(mln, result, test, query, A, k, m, gpNum, mpDict, line.strip(), runId, iterating)
+				getMargProbRP(mln, result, test, query, A, k, m, gpNum, mpDict, line.strip(), runId)
 #				getMargProbOOB(mln, result, test, query, line.strip(), mpDictOOB)
 				#replace commented out line with old line
 				testdb = open(test, "r+")
@@ -241,6 +200,6 @@ def computeMargForGPs(mln, result, test, mpDict, numGPDict, A, k, m, mpDictOOB, 
                 last_pos = testdb.tell()
                 line = testdb.readline()
 	testdb.close()
-
+	
 if __name__ == '__main__':
 	main()
